@@ -85,6 +85,55 @@ namespace AI.Sampling.Example
             return configuration;
         }
 
+        public static TelemetryConfiguration ConfigureFilteringWithMetrics(
+         this TelemetryConfiguration configuration)
+        {
+            // Automatically collect dependency calls
+            var dependencies = new DependencyTrackingTelemetryModule();
+            dependencies.Initialize(configuration);
+            // Automatically correlate all telemetry data with request
+            configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
+            // Build telemetry processing pipeline
+            configuration.TelemetryProcessorChainBuilder
+              // This telemetry processor will be executed ONLY when telemetry is sampled in
+              .Use((next) =>
+              {
+                  return new DependencyFilteringWithMetricsTelemetryProcessor(next, configuration);
+              })
+              // This is a standard fixed sampling processor that'll let only 10%
+              .Use((next) =>
+              {
+                  return new SamplingTelemetryProcessor(next)
+                  {
+                      IncludedTypes = "Dependency",
+                      SamplingPercentage = 10,
+                  };
+              })
+              // This is a standard adaptive sampling telemetry processor
+              // that will sample in/out any telemetry item it receives
+              .Use((next) =>
+              {
+                  var settings = new SamplingPercentageEstimatorSettings
+                  {
+                      MaxTelemetryItemsPerSecond = 1, // Default: 5 calls/sec
+                      SamplingPercentageIncreaseTimeout = TimeSpan.FromSeconds(1), // Default: 2 min
+                      SamplingPercentageDecreaseTimeout = TimeSpan.FromSeconds(1), // Default: 30 sec
+                      EvaluationInterval = TimeSpan.FromSeconds(1), // Default: 15 sec
+                      InitialSamplingPercentage = 25, // Default: 100%  
+                  };
+
+                  var adaptiveSamplingProcessor = new AdaptiveSamplingTelemetryProcessor(settings, new AdaptiveSamplingPercentageEvaluatedCallback(AdaptiveSamplingEvaluated), next)
+                  {
+                      ExcludedTypes = "Event", // Exclude custom events from being sampled                    
+                  };
+
+                  return adaptiveSamplingProcessor;
+              })
+              .Build();
+
+            return configuration;
+        }
+
         public static TelemetryConfiguration ConfigureWithFiltering(
             this TelemetryConfiguration configuration)
         {
