@@ -56,16 +56,23 @@ namespace AI.Sampling.Example
                     properties: new Dictionary<string, string>() { { "iteration", iteration.ToString() } });
                     client.TrackTrace($"Iteration {iteration} started", SeverityLevel.Information);
 
-                    Console.WriteLine($"Iteration {iteration}. " +
-                          $"Elapsed time: {operation.Telemetry.Duration}. " +
-                          $"Collected Telemetry: {collectedItems} (bytes). " +
-                          $"Sent Telemetry: {sentItems} (bytes). " +
-                          $"Ratio: {1.0 * collectedItems / sentItems}");
+                    Cmd.Ln.EOL()
+                        .White("Adaptive Sampling:").EOL()
+                        .Gray("\tIteration: ").Yellow(iteration).EOL()
+                        .Gray("\tElapsed time: ").Yellow(operation.Telemetry.Duration).EOL()
+                        .Gray("\tCollected Telemetry: ").Cyan(collectedItems).Yellow(" (bytes)").EOL()
+                        .Gray("\tSent Telemetry: ").Cyan(iteration).Yellow(" (bytes)").EOL()
+                        .Gray("\tRatio: ").Green((1.0 * collectedItems / sentItems));
+
 
                     try
                     {
                         if (iteration % 10 == 0)
+                        {
+                            Cmd.Ln.EOL()
+                                .Red("Iteration ").Yellow(iteration).Red(" failed with exception.");
                             throw new ApplicationException("Some error took place.");
+                        }
 
                         await http.GetStringAsync(Constants.URL);
                     }
@@ -76,7 +83,9 @@ namespace AI.Sampling.Example
                         operation.Telemetry.Success = false;
                     }
                     client.StopOperation(operation);
-                    Console.WriteLine($"Iteration {iteration}. Elapsed time: { operation.Telemetry.Duration}");
+                    Cmd.Ln.EOL()
+                        .Gray("Iteration: ").Yellow(iteration)
+                        .Gray(", Elapsed time: ").Green(operation.Telemetry.Duration);
                     iteration++;
                 }
             }

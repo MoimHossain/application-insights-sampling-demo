@@ -19,7 +19,7 @@ namespace AI.Sampling.Example
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddHostedService<FilterWithMetricsWorker>();
+                    services.AddHostedService<AdaptiveSamplingWorker>();
                 });
     }
 }

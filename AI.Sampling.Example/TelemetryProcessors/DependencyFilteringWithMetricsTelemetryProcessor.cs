@@ -4,11 +4,8 @@ using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.ApplicationInsights.Metrics;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading;
 
 namespace AI.Sampling.Example.TelemetryProcessors
 {
@@ -17,6 +14,8 @@ namespace AI.Sampling.Example.TelemetryProcessors
     {
         private readonly ITelemetryProcessor next;
         private readonly TelemetryClient telemetryClient;
+
+        private int totalDependencyCount = 0;
         
         public DependencyFilteringWithMetricsTelemetryProcessor(
           ITelemetryProcessor next, TelemetryConfiguration configuration)
@@ -33,8 +32,14 @@ namespace AI.Sampling.Example.TelemetryProcessors
             {
                 var d = item as DependencyTelemetry;
 
-                telemetryClient.GetMetric("# of dependencies").TrackValue(1);
+                Interlocked.Increment(ref totalDependencyCount);
+                telemetryClient.GetMetric("# of dependencies").TrackValue(totalDependencyCount);
                 telemetryClient.GetMetric($"{d.Type} Dependencies durations (ms)").TrackValue(d.Duration.TotalMilliseconds);
+
+                if(totalDependencyCount % 10 == 0)
+                {
+                    telemetryClient.Flush();
+                }
 
                 if (d.Duration < TimeSpan.FromMilliseconds(100))
                 {

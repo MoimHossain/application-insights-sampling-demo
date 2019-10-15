@@ -42,7 +42,11 @@ namespace AI.Sampling.Example.Workers
                     try
                     {
                         if (iteration % 10 == 0)
+                        {
+                            Cmd.Ln.EOL()
+                                .Red("Iteration ").Yellow(iteration).Red(" failed with exception.");
                             throw new ApplicationException("Some error took place.");
+                        }
 
                         await http.GetStringAsync(Constants.URL);
                     }
@@ -53,7 +57,10 @@ namespace AI.Sampling.Example.Workers
                         operation.Telemetry.Success = false;
                     }
                     client.StopOperation(operation);
-                    Console.WriteLine($"Iteration {iteration}. Elapsed time: { operation.Telemetry.Duration}");
+
+                    Cmd.Ln.EOL()
+                        .Gray("Iteration: ").Yellow(iteration)
+                        .Gray(", Elapsed time: ").Green(operation.Telemetry.Duration);
                     iteration++;
                 }
             }

@@ -241,7 +241,9 @@ namespace AI.Sampling.Example
         {
             if(isSamplingPercentageChanged)
             {
-                Console.WriteLine($"New Sampling Rate: {newSamplingPercentage}%, Before it was {currentSamplingPercentage}%");
+                Cmd.Ln.EOL()
+                    .Gray("New Sampling Rate: ").Green(newSamplingPercentage).Green("% ")
+                    .Gray(", Before it was: ").Cyan(currentSamplingPercentage).Cyan("% ");
             }
         }
 
