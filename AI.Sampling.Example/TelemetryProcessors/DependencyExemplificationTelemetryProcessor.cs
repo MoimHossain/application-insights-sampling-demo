@@ -29,7 +29,7 @@ namespace AI.Sampling.Example
                     // this telemetry by setting sampling percentage to 100
                     ((ISupportSampling)item).SamplingPercentage = 100;
 
-                    Console.WriteLine($"Forced 'Sample-In' because of Slow request {r.Duration} (ms).");
+                    Cmd.Ln.Green($"Forced 'Sample-In' because of Slow request {r.Duration} (ms).").EOL();
                 }
             }
             // Continue with the next telemetry processor
